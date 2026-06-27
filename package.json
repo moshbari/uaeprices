@@ -1,0 +1,17 @@
+{
+  "name": "uaeprices",
+  "version": "1.0.0",
+  "description": "Abu Dhabi grocery price comparison across all marketplaces, powered by Claude web search",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "express": "^4.21.2"
+  }
+}

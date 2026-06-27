@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UAE Prices — Cheapest groceries in Abu Dhabi</title>
+  <meta name="description" content="Compare grocery prices across every Abu Dhabi marketplace and always buy the cheapest." />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🛒 UAE Prices</h1>
+    <p class="tagline">Compare every Abu Dhabi marketplace — buy the cheapest, every time.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="search">Find a price</button>
+    <button class="tab" data-tab="basket">My shopping list</button>
+  </nav>
+
+  <!-- SEARCH TAB -->
+  <section id="search" class="panel active">
+    <form id="searchForm" class="searchbar">
+      <input id="q" type="text" placeholder='e.g. Almarai milk 2L, Tide 5kg, eggs 30' autocomplete="off" />
+      <button type="submit">Compare</button>
+    </form>
+    <p class="hint" id="searchHint">Searching checks live prices across all Abu Dhabi stores — give it a few seconds.</p>
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- BASKET TAB -->
+  <section id="basket" class="panel">
+    <p class="hint">One item per line. We'll find the cheapest single store for everything, and the best store-by-store split.</p>
+    <textarea id="basketList" rows="7" placeholder="milk 2L&#10;eggs 30 pack&#10;chicken 1kg&#10;rice 5kg&#10;tomatoes 1kg"></textarea>
+    <button id="basketGo">Find cheapest plan</button>
+    <p class="hint" id="basketHint"></p>
+    <div id="basketResults"></div>
+  </section>
+
+  <footer>
+    <p>Prices are best-available estimates from live web search with a source link for each — always check at checkout.</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
