@@ -89,7 +89,7 @@ function renderPlan(data) {
   // Optimal split
   if (plan.split.lines.length) {
     html += `<div class="summary">
-      <div>Best store-by-store split</div>
+      <div class="lbl">Best store-by-store split</div>
       <div class="big">${aed(plan.split.total)}</div>
       ${plan.savings.splitSavings ? `<div class="save">Saves AED ${plan.savings.splitSavings.toFixed(2)} vs one store</div>` : ''}
     </div><div class="card">`;
@@ -105,7 +105,7 @@ function renderPlan(data) {
   if (plan.cheapestStore) {
     const cs = plan.cheapestStore;
     html += `<div class="headline">Cheapest single store: ${esc(cs.store)}</div>`;
-    html += `<div class="summary"><div class="big">${aed(cs.total)}</div>
+    html += `<div class="summary"><div class="lbl">Whole basket at ${esc(cs.store)}</div><div class="big">${aed(cs.total)}</div>
       <div>${cs.have}/${data.items.length} items available here${cs.missing ? ` · ${cs.missing} missing` : ''}</div>
       ${plan.savings.singleStoreSavings ? `<div class="save">Up to AED ${plan.savings.singleStoreSavings.toFixed(2)} cheaper than the priciest store</div>` : ''}
     </div><div class="card">`;
@@ -122,3 +122,83 @@ function renderPlan(data) {
   }
   return html;
 }
+
+// ---- Voice dictation (mic → /api/transcribe → shopping list) ----
+const micBtn = document.getElementById('micBtn');
+const micStatus = document.getElementById('micStatus');
+const basketList = document.getElementById('basketList');
+let mediaRecorder = null;
+let chunks = [];
+let recording = false;
+
+function pickMime() {
+  const opts = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+  for (const m of opts) { if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; }
+  return '';
+}
+
+// Turn a spoken sentence ("milk, eggs and some chicken") into list lines.
+function toLines(text) {
+  return text
+    .replace(/\band\b/gi, ',')
+    .split(/[,\n]+/)
+    .map((s) => s.replace(/^\s*(also|then|some|a|an)\s+/i, '').trim())
+    .filter(Boolean);
+}
+
+async function startRecording() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    micStatus.textContent = 'Voice input is not supported on this browser.';
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mime = pickMime();
+    mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    chunks = [];
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      micStatus.textContent = 'Transcribing…';
+      try {
+        const r = await fetch('/api/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': blob.type || 'audio/webm' },
+          body: blob,
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Transcription failed');
+        const items = toLines(data.text || '');
+        if (items.length) {
+          const cur = basketList.value.trim();
+          basketList.value = (cur ? cur + '\n' : '') + items.join('\n');
+          micStatus.textContent = `Added ${items.length} item${items.length > 1 ? 's' : ''}. Tap the mic to add more.`;
+        } else {
+          micStatus.textContent = "Didn't catch any items — try again.";
+        }
+      } catch (err) {
+        micStatus.textContent = err.message;
+      }
+    };
+    mediaRecorder.start();
+    recording = true;
+    micBtn.classList.add('recording');
+    micStatus.textContent = '🎙️ Listening… tap the mic again when you finish your list.';
+  } catch (err) {
+    micStatus.textContent = err.name === 'NotAllowedError'
+      ? 'Microphone permission denied — allow it in your browser to dictate.'
+      : 'Could not start the microphone.';
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  recording = false;
+  micBtn.classList.remove('recording');
+}
+
+micBtn?.addEventListener('click', () => {
+  if (recording) stopRecording();
+  else startRecording();
+});

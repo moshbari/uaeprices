@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>UAE Prices — Cheapest groceries in Abu Dhabi</title>
   <meta name="description" content="Compare grocery prices across every Abu Dhabi marketplace and always buy the cheapest." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+  <div class="glow"></div>
   <header>
-    <h1>🛒 UAE Prices</h1>
+    <div class="crest">♛</div>
+    <h1>UAE&nbsp;Prices</h1>
     <p class="tagline">Compare every Abu Dhabi marketplace — buy the cheapest, every time.</p>
   </header>
 
@@ -24,21 +29,27 @@
       <input id="q" type="text" placeholder='e.g. Almarai milk 2L, Tide 5kg, eggs 30' autocomplete="off" />
       <button type="submit">Compare</button>
     </form>
-    <p class="hint" id="searchHint">Searching checks live prices across all Abu Dhabi stores — give it a few seconds.</p>
+    <p class="hint" id="searchHint">Live prices are checked across all Abu Dhabi stores — give it a few seconds.</p>
     <div id="searchResults"></div>
   </section>
 
   <!-- BASKET TAB -->
   <section id="basket" class="panel">
-    <p class="hint">One item per line. We'll find the cheapest single store for everything, and the best store-by-store split.</p>
-    <textarea id="basketList" rows="7" placeholder="milk 2L&#10;eggs 30 pack&#10;chicken 1kg&#10;rice 5kg&#10;tomatoes 1kg"></textarea>
-    <button id="basketGo">Find cheapest plan</button>
-    <p class="hint" id="basketHint"></p>
+    <p class="hint">Add your items — type them, or tap the microphone and just say your list out loud. We'll find the cheapest single store for everything, plus the best store-by-store split.</p>
+    <div class="listwrap">
+      <textarea id="basketList" rows="7" placeholder="milk 2L&#10;eggs 30 pack&#10;chicken 1kg&#10;rice 5kg&#10;tomatoes 1kg"></textarea>
+      <button id="micBtn" class="mic" type="button" title="Dictate your list" aria-label="Dictate your list">
+        <span class="micicon">🎙️</span>
+      </button>
+    </div>
+    <p class="hint micstatus" id="micStatus"></p>
+    <button id="basketGo" class="primary">Find cheapest plan</button>
     <div id="basketResults"></div>
   </section>
 
   <footer>
     <p>Prices are best-available estimates from live web search with a source link for each — always check at checkout.</p>
+    <p class="by">Built by Mosh Bari · ZPresso LLC</p>
   </footer>
 
   <script src="/app.js"></script>

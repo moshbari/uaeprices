@@ -28,6 +28,26 @@ async function getOffersFor(query, { fresh = false } = {}) {
   return { offers, fetched_at: saved.fetched_at, cached: false };
 }
 
+// Voice dictation: receive the mic audio blob and proxy it (server-to-server, no
+// CORS) to our Railway transcription server's /transcribe-audio (OpenAI Whisper).
+const TRANSCRIBER_URL = process.env.TRANSCRIBER_URL || 'https://transcriber-production-f2f1.up.railway.app';
+app.post('/api/transcribe', express.raw({ type: '*/*', limit: '25mb' }), async (req, res) => {
+  if (!req.body || !req.body.length) return res.status(400).json({ error: 'No audio received.' });
+  try {
+    const ct = req.headers['content-type'] || 'audio/webm';
+    const ext = ct.includes('mp4') || ct.includes('m4a') ? 'm4a' : ct.includes('ogg') ? 'ogg' : 'webm';
+    const form = new FormData();
+    form.append('audio', new Blob([req.body], { type: ct }), `dictation.${ext}`);
+    const r = await fetch(`${TRANSCRIBER_URL}/transcribe-audio`, { method: 'POST', body: form });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return res.status(502).json({ error: data.error || 'Transcription failed.' });
+    res.json({ text: (data.text || '').trim() });
+  } catch (err) {
+    console.error('transcribe proxy error:', err);
+    res.status(500).json({ error: 'Could not transcribe audio. Try again.' });
+  }
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, hasClaude: !!(process.env.CLAUDE_CODE_OAUTH_TOKEN || process.env.ANTHROPIC_AUTH_TOKEN || process.env.ANTHROPIC_API_KEY) });
 });
